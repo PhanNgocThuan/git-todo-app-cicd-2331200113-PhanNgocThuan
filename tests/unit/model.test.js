@@ -1,36 +1,66 @@
 const { TodoService } = require('../../js/model');
 
-describe('TodoService Unit Tests', () => {
-    let service;
+describe('TodoService Model Unit Tests', () => {
+    let todoService;
 
     beforeEach(() => {
-        // Create a new service instance for each test to ensure isolation
-        service = new TodoService();
-        // This is a bit of a hack to reset the singleton for testing purposes
-        service.todos = [];
+        todoService = new TodoService();
+        todoService.todos = [];
+        todoService.observers = [];
     });
 
-    test('should add a new todo', () => {
-        // TODO: Call the addTodo method with some text.
-        // Then, assert that the service's todos array has a length of 1.
-        // Assert that the text of the first todo matches the input text.
+    test('addTodo: should add a new todo successfully', () => {
+        todoService.addTodo('Learn CI/CD');
+        const todos = todoService.getTodos();
+
+        expect(todos.length).toBe(1);
+        expect(todos[0].text).toBe('Learn CI/CD');
+        expect(todos[0].completed).toBe(false);
+        expect(typeof todos[0].id).toBe('number');
     });
 
-    test('should toggle the completed state of a todo', () => {
-        // TODO: First, add a todo.
-        // Then, get its ID and call the toggleTodoComplete method.
-        // Assert that the 'completed' property of that todo is now true.
-        // Call toggleTodoComplete again and assert that it's false.
+    test('addTodo: should not add a todo if text is empty', () => {
+        todoService.addTodo('');
+        todoService.addTodo(null);
+
+        const todos = todoService.getTodos();
+
+        expect(todos.length).toBe(0);
     });
 
-    test('should remove a todo', () => {
-        // TODO: Add a todo.
-        // Get its ID and call the removeTodo method.
-        // Assert that the service's todos array is now empty (length of 0).
+    test('toggleTodoComplete: should toggle the completed status of a todo', () => {
+        todoService.addTodo('Setup Playwright');
+        const todo = todoService.getTodos()[0];
+        const id = todo.id;
+
+        expect(todo.completed).toBe(false);
+
+        todoService.toggleTodoComplete(id);
+        expect(todoService.getTodos()[0].completed).toBe(true);
+
+        todoService.toggleTodoComplete(id);
+        expect(todoService.getTodos()[0].completed).toBe(false);
     });
 
-    test('should not add a todo if text is empty', () => {
-        // TODO: Call addTodo with an empty string.
-        // Assert that the todos array still has a length of 0.
+    test('removeTodo: should remove a todo by its id', () => {
+        jest.spyOn(Date, 'now')
+            .mockReturnValueOnce(1)
+            .mockReturnValueOnce(2);
+
+        todoService.addTodo('Task to remove');
+        todoService.addTodo('Task to keep');
+
+        const todos = todoService.getTodos();
+        const idToRemove = todos[0].id;
+        const idToKeep = todos[1].id;
+
+        todoService.removeTodo(idToRemove);
+
+        const remainingTodos = todoService.getTodos();
+        expect(remainingTodos.length).toBe(1);
+        expect(remainingTodos[0].id).toBe(idToKeep);
+        expect(remainingTodos[0].text).toBe('Task to keep');
+
+        jest.restoreAllMocks();
     });
 });
